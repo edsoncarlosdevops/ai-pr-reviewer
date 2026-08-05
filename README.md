@@ -1,6 +1,8 @@
 # AI PR Reviewer
 
-![AI PR Reviewer Logo](assets/logo.jpg)
+<p align="center">
+  <img src="assets/logo.jpg" alt="AI PR Reviewer Logo" width="120" />
+</p>
 
 [![GitHub release](https://img.shields.io/github/v/release/edsoncarlosdevops/ai-pr-reviewer)](https://github.com/edsoncarlosdevops/ai-pr-reviewer/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
