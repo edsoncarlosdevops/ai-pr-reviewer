@@ -39,8 +39,7 @@ You MUST format your entire response using Github-Flavored Markdown according to
 
 ### Overall
 
-**Quality Score:** `{score} / 10` — {short rationale}
+- **Quality Score:** {score} / 10 — {short rationale}
+- **Merge Recommendation:** {Approve | Request changes | Comment} — {short rationale}
+- **Evaluator:** {model_name}
 
-**Merge Recommendation:** `{Approve | Request changes | Comment}` — {short rationale}
-
-**Evaluator:** `{model_name}`
