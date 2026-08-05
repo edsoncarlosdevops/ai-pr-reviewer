@@ -65,20 +65,22 @@ class PromptBuilder:
         prompt = f"{base_instruction}\n\n"
         prompt += f"Evaluator Model Name to output in the template: {self.model_name}\n"
         prompt += f"TARGET FEEDBACK LANGUAGE MANDATE: You MUST write your entire review response (comments, findings, rationale) in '{self.language}'. Maintain all exact markdown structure and headers.\n\n"
+        prompt += "DYNAMIC SPECIALIST AGENT INSTRUCTION: You MUST review the PR through the lens of a domain-specific Senior Architect for this codebase. Examine all loaded AGENTS.md, *.prompt.md, and architectural guidelines from the project and strictly enforce their project-specific conventions, security constraints, and quality patterns.\n\n"
 
         if extra_prompts:
-            prompt += "## Specialized Rules to Enforce\n"
+            prompt += "## Domain Rules to Enforce\n"
             for title, rules in extra_prompts:
                 prompt += f"### {title}\n{rules}\n\n"
 
-        prompt += "## Repository Context Files Loaded\n"
+        prompt += "## Project-Specific Governance & Agent Context Files Loaded\n"
         if self.context_data or extra_prompts:
             loaded_list = list(self.context_data.keys()) + [t for t, _ in extra_prompts]
             prompt += f"IMPORTANT: In the 'Context consulted' section of your review response, YOU MUST EXPLICITLY LIST THESE FILES AND RULES CONSULTED: {', '.join(loaded_list)}\n\n"
             for file_name, content in self.context_data.items():
-                prompt += f"### File `{file_name}`\n```\n{content[:3000]}\n```\n\n"
+                prompt += f"### File `{file_name}`\n```\n{content[:4000]}\n```\n\n"
         else:
             prompt += "IMPORTANT: In the 'Context consulted' section of your review response, state: 'No AGENTS.md or extra context files found.'\n\n"
+
 
 
         if self.jira_data:
