@@ -1,6 +1,7 @@
-name: 'AI PR Reviewer'
+name: 'Universal AI PR Reviewer'
 description: 'Automated PR reviewer using DeepSeek LLM (OpenAI/Anthropic compatible)'
 author: 'edsoncarlosdevops'
+
 
 branding:
   icon: 'eye'
