@@ -55,13 +55,11 @@ def main():
         jira_client = JiraClient(config.jira)
         jira_data = jira_client.get_issue(args.jira)
         
-    prompt_builder = PromptBuilder(scope, context_data, jira_data)
+    prompt_builder = PromptBuilder(scope, context_data, jira_data, model_name=config.llm.model)
     prompt = prompt_builder.build()
     
     llm_client = LLMClient(config.llm)
-    raw_review = llm_client.generate_review(prompt)
-    
-    formatted_review = ReviewFormatter.format(raw_review)
+    formatted_review = llm_client.generate_review(prompt)
     
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
