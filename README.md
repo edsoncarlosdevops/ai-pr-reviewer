@@ -1,4 +1,5 @@
-# AI PR Reviewer
+# Universal AI PR Reviewer
+
 
 <p align="center">
   <img src="assets/banner.jpg" alt="AI PR Reviewer Banner Logo" width="680" />
