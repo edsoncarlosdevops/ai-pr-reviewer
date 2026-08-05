@@ -1,9 +1,10 @@
 name: 'AI PR Reviewer'
-description: 'Automated PR reviewer using DeepSeek LLM'
-author: 'Edson Carlos'
+description: 'Automated PR reviewer using DeepSeek LLM (OpenAI/Anthropic compatible)'
+author: 'edsoncarlosdevops'
+
 branding:
-  icon: 'message-square'
-  color: 'blue'
+  icon: 'eye'
+  color: 'purple'
 
 inputs:
   github_token:
@@ -12,6 +13,10 @@ inputs:
   deepseek_api_key:
     description: 'DeepSeek API Key for AI review generation'
     required: true
+  model:
+    description: 'LLM model identifier'
+    required: false
+    default: 'deepseek-chat'
   exclude_patterns:
     description: 'Comma separated list of glob patterns to exclude from review'
     required: false
@@ -20,9 +25,72 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Run AI PR Reviewer
-      uses: ./wrappers/github-action
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        github_token: ${{ inputs.github_token }}
-        deepseek_api_key: ${{ inputs.deepseek_api_key }}
-        exclude_patterns: ${{ inputs.exclude_patterns }}
+        python-version: '3.11'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Fetch PR Diff
+      shell: bash
+      run: |
+        git fetch origin ${{ github.base_ref }} --depth=1 || true
+        git diff origin/${{ github.base_ref }}...HEAD > "${{ github.workspace }}/pr_diff.patch" || git diff HEAD~1 > "${{ github.workspace }}/pr_diff.patch"
+
+    - name: Run Review Engine
+      shell: bash
+      env:
+        DEEPSEEK_API_KEY: ${{ inputs.deepseek_api_key }}
+        OPENAI_API_KEY: ${{ inputs.deepseek_api_key }}
+      run: |
+        python "${{ github.action_path }}/core/cli.py" \
+          --diff "${{ github.workspace }}/pr_diff.patch" \
+          --workspace "${{ github.workspace }}" \
+          --output "${{ github.workspace }}/review_output.md" \
+          --model "${{ inputs.model }}"
+
+    - name: Post Comment on PR
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          const outputPath = `${process.env.GITHUB_WORKSPACE}/review_output.md`;
+          if (!fs.existsSync(outputPath)) {
+            console.log('No review output file found.');
+            return;
+          }
+          const reviewBody = fs.readFileSync(outputPath, 'utf8');
+          const stickyTag = '<!-- ai-pr-reviewer-report -->';
+          const fullComment = `${stickyTag}\n${reviewBody}`;
+
+          const prNumber = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+          if (!prNumber) return;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+          });
+
+          const existingComment = comments.find(c => c.body && c.body.includes(stickyTag));
+
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: fullComment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: fullComment
+            });
+          }
