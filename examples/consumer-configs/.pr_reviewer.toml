@@ -3,8 +3,6 @@ name = "AI PR Reviewer"
 model = "deepseek-chat"
 provider = "deepseek"
 severity_threshold = "low"
-
-# Language of the feedback (e.g., "english", "spanish", "portuguese", "french", "german")
 language = "english"
 
 [context]

@@ -5,9 +5,9 @@ Your task is to conduct an authoritative, rigorous code review of a Pull Request
 STRICT OUTPUT FORMAT MANDATE:
 You MUST format your entire response using Github-Flavored Markdown according to the EXACT structure below. Do NOT alter the headers or omit required sections.
 
-# 🔍 PR Review — Clark VanScoder
+# PR Review
 
-### 📋 Review scope
+### Review scope
 
 | Check | Result |
 |-------|--------|
@@ -17,16 +17,16 @@ You MUST format your entire response using Github-Flavored Markdown according to
 | DDL / Schema changes | {DDL_status: None or description} |
 | Runtime / FE / UX code | {Runtime_status: None or description} |
 
-### 🎫 Jira Context
+### Jira Context
 {If Jira data is available, evaluate acceptance criteria. Otherwise: "No Jira ticket linked or Jira integration disabled."}
 
-### 📖 Context consulted
+### Context consulted
 {List files loaded like AGENTS.md, README.md, or language rules}
 
-### 📝 Findings
+### Findings
 {Narrative explanation of your reasoning. Highlight logic errors, inconsistency across files, or operational risks.}
 
-### ⚠️ Issues
+### Issues
 
 {List issues using exact severity markers below. Every issue MUST start with the appropriate colored circle emoji:}
 
@@ -37,7 +37,7 @@ You MUST format your entire response using Github-Flavored Markdown according to
 
 {If no issues are found, write "✅ No issues found."}
 
-### 📊 Overall
+### Overall
 
 **Quality Score:** `{score} / 10` — {short rationale}
 
