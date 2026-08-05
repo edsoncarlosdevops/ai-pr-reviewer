@@ -29,19 +29,38 @@ class PromptBuilder:
             base_instruction = "You are Clark VanScoder, lead DevOps architect. Perform a strict code review."
 
         # Detect language specific extra prompts
-        extra_prompts = []
+        extra_prompts_map = {}
         prompts_dir = Path(__file__).resolve().parent.parent / "prompts"
+        
         for file_path in self.diff_scope.files_changed:
-            ext = Path(file_path).suffix.lower()
+            path_obj = Path(file_path)
+            ext = path_obj.suffix.lower()
+            name = path_obj.name.lower()
+
             if ext in [".tf", ".tfvars"] and (prompts_dir / "terraform.md").exists():
-                extra_prompts.append(("Terraform Rules", (prompts_dir / "terraform.md").read_text(encoding="utf-8")))
-            elif "Dockerfile" in file_path and (prompts_dir / "docker.md").exists():
-                extra_prompts.append(("Docker Rules", (prompts_dir / "docker.md").read_text(encoding="utf-8")))
+                extra_prompts_map["Terraform Rules"] = (prompts_dir / "terraform.md").read_text(encoding="utf-8")
+            elif ("dockerfile" in name or ext in [".dockerfile"]) and (prompts_dir / "docker.md").exists():
+                extra_prompts_map["Docker Rules"] = (prompts_dir / "docker.md").read_text(encoding="utf-8")
             elif ext in [".py"] and (prompts_dir / "python.md").exists():
-                extra_prompts.append(("Python Rules", (prompts_dir / "python.md").read_text(encoding="utf-8")))
-            elif "ros2" in file_path.lower() or "telemetry" in file_path.lower():
+                extra_prompts_map["Python Rules"] = (prompts_dir / "python.md").read_text(encoding="utf-8")
+            elif ext in [".go"] and (prompts_dir / "go.md").exists():
+                extra_prompts_map["Go Rules"] = (prompts_dir / "go.md").read_text(encoding="utf-8")
+            elif ext in [".rs"] and (prompts_dir / "rust.md").exists():
+                extra_prompts_map["Rust Rules"] = (prompts_dir / "rust.md").read_text(encoding="utf-8")
+            elif ext in [".js", ".jsx", ".ts", ".tsx"] and (prompts_dir / "typescript.md").exists():
+                extra_prompts_map["TypeScript/JavaScript Rules"] = (prompts_dir / "typescript.md").read_text(encoding="utf-8")
+            elif ext in [".sh", ".bash"] and (prompts_dir / "shell.md").exists():
+                extra_prompts_map["Shell Script Rules"] = (prompts_dir / "shell.md").read_text(encoding="utf-8")
+            elif ".github/workflows" in file_path and (prompts_dir / "github_actions.md").exists():
+                extra_prompts_map["GitHub Actions Rules"] = (prompts_dir / "github_actions.md").read_text(encoding="utf-8")
+            elif ext in [".yaml", ".yml"] and any(k in file_path.lower() for k in ["k8s", "helm", "manifest", "deployment", "service"]) and (prompts_dir / "kubernetes.md").exists():
+                extra_prompts_map["Kubernetes Rules"] = (prompts_dir / "kubernetes.md").read_text(encoding="utf-8")
+            
+            if "ros2" in file_path.lower() or "telemetry" in file_path.lower():
                 if (prompts_dir / "ros2.md").exists():
-                    extra_prompts.append(("ROS 2 Rules", (prompts_dir / "ros2.md").read_text(encoding="utf-8")))
+                    extra_prompts_map["ROS 2 Rules"] = (prompts_dir / "ros2.md").read_text(encoding="utf-8")
+
+        extra_prompts = list(extra_prompts_map.items())
 
         prompt = f"{base_instruction}\n\n"
         prompt += f"Evaluator Model Name to output in the template: {self.model_name}\n"

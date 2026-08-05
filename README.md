@@ -34,7 +34,7 @@ Unlike simple diff summarizers or closed SaaS subscriptions, **AI PR Reviewer** 
 
 ## 🌟 Key Features
 
-- **Multi-Cloud & Infrastructure Native**: Built-in rules for **Terraform/OpenTofu**, **ROS 2 robotics telemetry**, **Docker multi-stage**, **Kubernetes manifests**, and **GitHub Actions workflows**.
+- **Language Specialist Prompts**: Specialized rule sets for **Terraform/OpenTofu**, **Docker**, **Kubernetes**, **Python**, **Go**, **Rust**, **JavaScript/TypeScript**, **Shell Scripts**, **ROS 2**, and **GitHub Actions workflows**.
 - **Pluggable Model Architecture**: Use **DeepSeek V4-Pro** (~$0.003/review), **GPT-4o / GPT-4o-mini**, **Claude 3.5 Sonnet**, or any OpenAI-compatible custom API endpoint.
 - **Multilingual Feedback Support**: Configurable feedback output language (English, Portuguese, Spanish, French, German) via `.pr_reviewer.toml`.
 - **Agnostic Core Architecture**: The core Python engine is decoupled from CI/CD runners. Execute via GitHub Actions, Azure DevOps Pipelines, GitLab CI, or terminal CLI.
