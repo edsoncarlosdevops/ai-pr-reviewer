@@ -53,11 +53,14 @@ class PromptBuilder:
                 prompt += f"### {title}\n{rules}\n\n"
 
         prompt += "## Repository Context Files Loaded\n"
-        if self.context_data:
+        if self.context_data or extra_prompts:
+            loaded_list = list(self.context_data.keys()) + [t for t, _ in extra_prompts]
+            prompt += f"IMPORTANT: In the 'Context consulted' section of your review response, YOU MUST EXPLICITLY LIST THESE FILES AND RULES CONSULTED: {', '.join(loaded_list)}\n\n"
             for file_name, content in self.context_data.items():
-                prompt += f"### File `{file_name}`\n```\n{content[:2000]}\n```\n\n"
+                prompt += f"### File `{file_name}`\n```\n{content[:3000]}\n```\n\n"
         else:
-            prompt += "_No AGENTS.md or extra context files found._\n\n"
+            prompt += "IMPORTANT: In the 'Context consulted' section of your review response, state: 'No AGENTS.md or extra context files found.'\n\n"
+
 
         if self.jira_data:
             summary = self.jira_data.get("fields", {}).get("summary", "No summary")

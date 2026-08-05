@@ -43,6 +43,36 @@ Unlike simple diff summarizers or closed SaaS subscriptions, **AI PR Reviewer** 
 
 ---
 
+## 🔑 API Keys & Authentication Setup
+
+`AI PR Reviewer` supports any LLM provider (DeepSeek, OpenAI, Anthropic). Supply your provider API key via standard secrets or environment variables depending on your platform:
+
+| Provider | Environment Variable / Input Parameter | How to Obtain API Key |
+| :--- | :--- | :--- |
+| **DeepSeek (Default)** | `DEEPSEEK_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com) |
+| **OpenAI** | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com) |
+| **Anthropic** | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
+
+### 🔐 Platform Secret Configuration
+
+- **GitHub Actions**: Go to **Settings -> Secrets and variables -> Actions**, click **New repository secret**, and create `DEEPSEEK_API_KEY` (or `OPENAI_API_KEY`).
+- **Azure DevOps**: Store `DEEPSEEK_API_KEY` inside a **Variable Group** (e.g. `global-secrets`) or pipeline variable with secret encryption enabled.
+- **GitLab CI**: Go to **Settings -> CI/CD -> Variables**, add `DEEPSEEK_API_KEY`, and mark it as **Masked** and **Protected**.
+- **Local CLI**: Export via shell environment variable: `export DEEPSEEK_API_KEY="sk-..."` or `export OPENAI_API_KEY="sk-..."`.
+
+---
+
+## 🔍 How "Context Consulted" Scans Your Repository
+
+The `Context consulted` section in the generated review automatically discovers, ingests, and enforces governance files across your codebase:
+
+1. **Recursive `AGENTS.md` Ingestion**: Scans the root and all subdirectories for `AGENTS.md` files (e.g., `root/AGENTS.md`, `terraform/AGENTS.md`, `azure/AGENTS.md`).
+2. **Repository Guide**: Ingests `README.md` to align reviews with project architecture.
+3. **Extra Custom Files**: Add any architectural document (e.g. `docs/architecture.md`, `CONTRIBUTING.md`) in `.pr_reviewer.toml` under `extra_context_files`.
+4. **Automatic Language/Tech Rules**: Detects modified file extensions and automatically injects domain rules (`prompts/terraform.md`, `prompts/ros2.md`, `prompts/docker.md`, `prompts/kubernetes.md`, `prompts/python.md`, `prompts/github_actions.md`).
+
+---
+
 ## 🚀 Quickstart & Integration Guides
 
 ### 1. GitHub Actions
@@ -129,6 +159,7 @@ python core/cli.py --diff /tmp/pr.patch --workspace . --output review.md
 # View generated review
 cat review.md
 ```
+
 
 ---
 
