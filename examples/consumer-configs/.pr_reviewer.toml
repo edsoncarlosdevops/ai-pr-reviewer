@@ -1,10 +1,19 @@
 [reviewer]
-model = "deepseek-coder"
+name = "AI PR Reviewer"
+model = "deepseek-chat"
 provider = "deepseek"
-exclude = [
-    "tests/**",
-    "docs/**",
-    "*.md"
+severity_threshold = "low"
+
+# Language of the feedback (e.g., "english", "spanish", "portuguese", "french", "german")
+language = "english"
+
+[context]
+# Extra context files to read alongside AGENTS.md and README.md
+extra_context_files = [
+  "docs/architecture.md"
 ]
-temperature = 0.2
-max_tokens = 4000
+
+[jira]
+# Set to true to enable Jira issue requirement verification
+enabled = false
+base_url = "https://your-org.atlassian.net"

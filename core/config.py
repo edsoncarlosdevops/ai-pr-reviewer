@@ -2,7 +2,12 @@
 Configuration module for the AI PR Reviewer.
 """
 import os
-import tomllib
+import sys
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, List
@@ -20,6 +25,7 @@ class LLMConfig:
     model: str = "deepseek-chat"
     base_url: str = "https://api.deepseek.com"
     api_key: Optional[str] = None
+    language: str = "english"  # Feedback language (e.g. english, spanish, portuguese, french, german)
 
 @dataclass
 class AppConfig:
@@ -38,11 +44,19 @@ def load_config(workspace_path: Path) -> AppConfig:
             with open(config_path, "rb") as f:
                 data = tomllib.load(f)
                 
+            if "reviewer" in data:
+                rev_data = data["reviewer"]
+                app_config.llm.provider = rev_data.get("provider", app_config.llm.provider)
+                app_config.llm.model = rev_data.get("model", app_config.llm.model)
+                app_config.llm.base_url = rev_data.get("base_url", app_config.llm.base_url)
+                app_config.llm.language = rev_data.get("language", app_config.llm.language)
+
             if "llm" in data:
                 llm_data = data["llm"]
                 app_config.llm.provider = llm_data.get("provider", app_config.llm.provider)
                 app_config.llm.model = llm_data.get("model", app_config.llm.model)
                 app_config.llm.base_url = llm_data.get("base_url", app_config.llm.base_url)
+                app_config.llm.language = llm_data.get("language", app_config.llm.language)
                 
             if "jira" in data:
                 jira_data = data["jira"]
@@ -52,7 +66,7 @@ def load_config(workspace_path: Path) -> AppConfig:
                 app_config.jira.api_token = jira_data.get("api_token", app_config.jira.api_token)
                 
             if "context" in data:
-                app_config.extra_context_files = data["context"].get("extra_files", [])
+                app_config.extra_context_files = data["context"].get("extra_context_files", []) or data["context"].get("extra_files", [])
         except Exception:
             pass
             

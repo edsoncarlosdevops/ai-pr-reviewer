@@ -55,7 +55,13 @@ def main():
         jira_client = JiraClient(config.jira)
         jira_data = jira_client.get_issue(args.jira)
         
-    prompt_builder = PromptBuilder(scope, context_data, jira_data, model_name=config.llm.model)
+    prompt_builder = PromptBuilder(
+        scope,
+        context_data,
+        jira_data,
+        model_name=config.llm.model,
+        language=config.llm.language
+    )
     prompt = prompt_builder.build()
     
     llm_client = LLMClient(config.llm)

@@ -1,16 +1,24 @@
 """
-Builds the LLM prompt by loading prompt templates, context files, and scope.
+Builds the LLM prompt by loading prompt templates, context files, language preference, and scope.
 """
 from pathlib import Path
 from typing import Dict, Any, Optional
 from .diff_analyzer import DiffScope
 
 class PromptBuilder:
-    def __init__(self, diff_scope: DiffScope, context_data: Dict[str, str], jira_data: Optional[Dict[str, Any]] = None, model_name: str = "deepseek-chat"):
+    def __init__(
+        self,
+        diff_scope: DiffScope,
+        context_data: Dict[str, str],
+        jira_data: Optional[Dict[str, Any]] = None,
+        model_name: str = "deepseek-chat",
+        language: str = "english"
+    ):
         self.diff_scope = diff_scope
         self.context_data = context_data
         self.jira_data = jira_data
         self.model_name = model_name
+        self.language = language
 
     def build(self) -> str:
         base_prompt_path = Path(__file__).resolve().parent.parent / "prompts" / "base_review.md"
@@ -36,7 +44,8 @@ class PromptBuilder:
                     extra_prompts.append(("ROS 2 Rules", (prompts_dir / "ros2.md").read_text(encoding="utf-8")))
 
         prompt = f"{base_instruction}\n\n"
-        prompt += f"Evaluator Model Name to output in the template: {self.model_name}\n\n"
+        prompt += f"Evaluator Model Name to output in the template: {self.model_name}\n"
+        prompt += f"TARGET FEEDBACK LANGUAGE MANDATE: You MUST write your entire review response (comments, findings, rationale) in '{self.language}'. Maintain all exact markdown structure and headers.\n\n"
 
         if extra_prompts:
             prompt += "## Specialized Rules to Enforce\n"
@@ -65,5 +74,5 @@ class PromptBuilder:
         prompt += self.diff_scope.raw_diff
         prompt += "\n```\n\n"
 
-        prompt += "Output the markdown review strictly adhering to the requested format."
+        prompt += f"Output the markdown review strictly adhering to the requested format and in the target language '{self.language}'."
         return prompt
