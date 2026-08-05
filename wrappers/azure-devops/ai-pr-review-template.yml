@@ -1,0 +1,21 @@
+parameters:
+  - name: exclude_patterns
+    type: string
+    default: ''
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.10'
+      addToPath: true
+    displayName: 'Set up Python'
+
+  - script: pip install -r $(System.DefaultWorkingDirectory)/requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: python $(System.DefaultWorkingDirectory)/cli/reviewer.py
+    env:
+      DEEPSEEK_API_KEY: $(DEEPSEEK_API_KEY)
+      AZURE_DEVOPS_TOKEN: $(System.AccessToken)
+      EXCLUDE_PATTERNS: ${{ parameters.exclude_patterns }}
+    displayName: 'Run AI PR Reviewer'

@@ -1,0 +1,28 @@
+name: 'AI PR Reviewer'
+description: 'Automated PR reviewer using DeepSeek LLM'
+author: 'Edson Carlos'
+branding:
+  icon: 'message-square'
+  color: 'blue'
+
+inputs:
+  github_token:
+    description: 'GitHub token for authenticating API requests'
+    required: true
+  deepseek_api_key:
+    description: 'DeepSeek API Key for AI review generation'
+    required: true
+  exclude_patterns:
+    description: 'Comma separated list of glob patterns to exclude from review'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run AI PR Reviewer
+      uses: ./wrappers/github-action
+      with:
+        github_token: ${{ inputs.github_token }}
+        deepseek_api_key: ${{ inputs.deepseek_api_key }}
+        exclude_patterns: ${{ inputs.exclude_patterns }}

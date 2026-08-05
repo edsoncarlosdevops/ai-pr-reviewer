@@ -1,0 +1,7 @@
+include:
+  - local: 'wrappers/gitlab-ci/.ai-review.yml'
+
+ai-review-job:
+  extends: .ai-review
+  variables:
+    EXCLUDE_PATTERNS: 'tests/**,*.md'

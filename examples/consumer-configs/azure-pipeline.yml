@@ -1,0 +1,15 @@
+trigger:
+  - main
+
+pr:
+  - main
+
+jobs:
+  - job: ai_pr_review
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+      - template: wrappers/azure-devops/ai-pr-review-template.yml
+        parameters:
+          exclude_patterns: 'tests/**,*.md'

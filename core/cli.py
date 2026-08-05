@@ -1,0 +1,74 @@
+"""
+CLI entry point.
+"""
+import argparse
+import sys
+from pathlib import Path
+
+# Support running both as a script and as a module
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from core.config import load_config
+from core.diff_analyzer import DiffAnalyzer
+from core.context_loader import ContextLoader
+from core.jira_client import JiraClient
+from core.prompt_builder import PromptBuilder
+from core.llm_client import LLMClient
+from core.review_formatter import ReviewFormatter
+
+def main():
+    parser = argparse.ArgumentParser(description="AI PR Reviewer")
+    parser.add_argument("--diff", type=str, required=True, help="Path to the diff/patch file")
+    parser.add_argument("--workspace", type=str, required=True, help="Path to the workspace")
+    parser.add_argument("--output", type=str, help="Path to save the review output")
+    parser.add_argument("--model", type=str, help="Model to use")
+    parser.add_argument("--provider", type=str, help="Provider to use")
+    parser.add_argument("--base-url", type=str, help="Base URL for the provider")
+    parser.add_argument("--jira", type=str, help="Jira issue key")
+    
+    args = parser.parse_args()
+    
+    workspace_path = Path(args.workspace)
+    diff_path = Path(args.diff)
+    
+    if not workspace_path.is_dir():
+        print(f"Error: Workspace {args.workspace} is not a directory")
+        sys.exit(1)
+        
+    config = load_config(workspace_path)
+    
+    if args.model:
+        config.llm.model = args.model
+    if args.provider:
+        config.llm.provider = args.provider
+    if args.base_url:
+        config.llm.base_url = args.base_url
+        
+    diff_analyzer = DiffAnalyzer(diff_path)
+    scope = diff_analyzer.analyze()
+    
+    context_loader = ContextLoader(workspace_path, config.extra_context_files)
+    context_data = context_loader.load_context()
+    
+    jira_data = None
+    if args.jira and config.jira.enabled:
+        jira_client = JiraClient(config.jira)
+        jira_data = jira_client.get_issue(args.jira)
+        
+    prompt_builder = PromptBuilder(scope, context_data, jira_data)
+    prompt = prompt_builder.build()
+    
+    llm_client = LLMClient(config.llm)
+    raw_review = llm_client.generate_review(prompt)
+    
+    formatted_review = ReviewFormatter.format(raw_review)
+    
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as f:
+            f.write(formatted_review)
+        print(f"Review saved to {args.output}")
+    else:
+        print(formatted_review)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,9 @@
+.ai-review:
+  image: python:3.10
+  script:
+    - pip install -r requirements.txt
+    - python cli/reviewer.py
+  variables:
+    EXCLUDE_PATTERNS: ''
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"

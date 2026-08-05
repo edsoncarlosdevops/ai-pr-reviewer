@@ -1,0 +1,4 @@
+openai>=1.0.0
+pyyaml
+tomli; python_version < "3.11"
+requests
