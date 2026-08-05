@@ -79,7 +79,9 @@ class PromptBuilder:
             for file_name, content in self.context_data.items():
                 prompt += f"### File `{file_name}`\n```\n{content[:4000]}\n```\n\n"
         else:
-            prompt += "IMPORTANT: In the 'Context consulted' section of your review response, state: 'No AGENTS.md or extra context files found.'\n\n"
+            prompt += "FALLBACK AGENT INSTRUCTION: No AGENTS.md or custom rule files were found in this repository. Act as a Principal Software Engineer and System Architect for this project, enforcing industry best practices for security, performance, clean architecture, and error handling for the detected technologies.\n"
+            prompt += "IMPORTANT: In the 'Context consulted' section of your review response, state: 'Regras de Arquitetura Genéricas (Nenhum AGENTS.md encontrado)'.\n\n"
+
 
 
 
