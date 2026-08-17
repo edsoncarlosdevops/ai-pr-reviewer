@@ -1,9 +1,24 @@
 .ai-review:
-  image: python:3.10
-  script:
-    - pip install -r requirements.txt
-    - python cli/reviewer.py
+  image: python:3.11-slim
   variables:
+    AI_REVIEWER_REF: 'v1'
+    AI_REVIEWER_REPO: 'https://github.com/edsoncarlosdevops/ai-pr-reviewer.git'
+    AI_REVIEWER_MODEL: 'deepseek-chat'
     EXCLUDE_PATTERNS: ''
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git >/dev/null
+    - git clone --quiet --depth 1 --branch "$AI_REVIEWER_REF" "$AI_REVIEWER_REPO" /tmp/ai-pr-reviewer
+    - pip install --quiet -r /tmp/ai-pr-reviewer/requirements.txt
+  script:
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth=50 || true
+    - git diff "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}...HEAD" > /tmp/pr_diff.patch || git diff HEAD~1 > /tmp/pr_diff.patch
+    - >
+      python /tmp/ai-pr-reviewer/core/cli.py
+      --diff /tmp/pr_diff.patch
+      --workspace "$CI_PROJECT_DIR"
+      --output /tmp/review_output.md
+      --model "$AI_REVIEWER_MODEL"
+      --exclude "$EXCLUDE_PATTERNS"
+    - python /tmp/ai-pr-reviewer/wrappers/gitlab-ci/post_comment.py --review /tmp/review_output.md

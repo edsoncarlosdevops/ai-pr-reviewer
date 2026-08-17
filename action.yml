@@ -52,7 +52,8 @@ runs:
           --diff "${{ github.workspace }}/pr_diff.patch" \
           --workspace "${{ github.workspace }}" \
           --output "${{ github.workspace }}/review_output.md" \
-          --model "${{ inputs.model }}"
+          --model "${{ inputs.model }}" \
+          --exclude "${{ inputs.exclude_patterns }}"
 
     - name: Post Comment on PR
       uses: actions/github-script@v7

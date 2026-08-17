@@ -11,9 +11,11 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: AI PR Reviewer
-        uses: ./wrappers/github-action
+        uses: edsoncarlosdevops/ai-pr-reviewer@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}

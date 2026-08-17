@@ -1,15 +1,22 @@
-trigger:
-  - main
+trigger: none
 
 pr:
   - main
+
+resources:
+  repositories:
+    - repository: ai-reviewer
+      type: github
+      name: edsoncarlosdevops/ai-pr-reviewer
+      ref: refs/tags/v1
+      endpoint: github-service-connection
 
 jobs:
   - job: ai_pr_review
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - checkout: self
-      - template: wrappers/azure-devops/ai-pr-review-template.yml
+      - template: wrappers/azure-devops/ai-pr-review-template.yml@ai-reviewer
         parameters:
+          model: 'deepseek-chat'
           exclude_patterns: 'tests/**,*.md'

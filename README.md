@@ -6,6 +6,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/edsoncarlosdevops/ai-pr-reviewer/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/edsoncarlosdevops/ai-pr-reviewer/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI status"></a>
   <a href="https://github.com/edsoncarlosdevops/ai-pr-reviewer/releases"><img src="https://img.shields.io/github/v/release/edsoncarlosdevops/ai-pr-reviewer?style=for-the-badge&color=6C3FB5" alt="GitHub release"></a>
   <a href="https://github.com/marketplace/actions/ai-pr-reviewer"><img src="https://img.shields.io/badge/Marketplace-AI%20PR%20Reviewer-blue?style=for-the-badge&logo=github" alt="Marketplace"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License"></a>
@@ -101,11 +102,18 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+          # Optional: comma separated glob patterns skipped from review
+          exclude_patterns: 'tests/**,*.md,dist/**'
 ```
 
 ### 2. Azure DevOps Pipelines
 
-Include the reusable pipeline template in `azure-pipelines.yml`:
+Include the reusable pipeline template in `azure-pipelines.yml`. The template clones the
+pinned engine version at run time, so no checkout of this repository is required beyond
+declaring it as a repository resource (needed so Azure DevOps can resolve the template
+file itself). Store `DEEPSEEK_API_KEY` as a pipeline/library variable, and make sure the
+pipeline's **"Allow scripts to access the OAuth token"** option is enabled so the review
+can be posted as a PR comment:
 
 ```yaml
 trigger: none
@@ -122,24 +130,34 @@ resources:
     ref: refs/tags/v1
     endpoint: github-service-connection
 
-stages:
-- template: wrappers/azure-devops/ai-pr-review-template.yml@ai-reviewer
-  parameters:
-    model_name: deepseek-chat
-    deepseek_api_key: $(DEEPSEEK_API_KEY)
+jobs:
+- job: ai_pr_review
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: wrappers/azure-devops/ai-pr-review-template.yml@ai-reviewer
+    parameters:
+      model: deepseek-chat
+      exclude_patterns: 'tests/**,*.md'
 ```
 
 ### 3. GitLab CI
 
-Add the include block to `.gitlab-ci.yml`:
+Add the include block to `.gitlab-ci.yml`. Posting the review as a merge request note
+requires a `GITLAB_TOKEN` CI/CD variable (a project or personal access token with `api`
+scope, marked **Masked** and **Protected**) — GitLab's built-in `CI_JOB_TOKEN` is used as
+a fallback but only has the required permission on GitLab 16.0+ with expanded job token
+permissions enabled:
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/edsoncarlosdevops/ai-pr-reviewer/v1/wrappers/gitlab-ci/.ai-review.yml'
 
-variables:
-  DEEPSEEK_API_KEY: $DEEPSEEK_API_KEY
-  AI_REVIEW_MODEL: "deepseek-chat"
+ai-review-job:
+  extends: .ai-review
+  variables:
+    AI_REVIEWER_MODEL: "deepseek-chat"
+    EXCLUDE_PATTERNS: "tests/**,*.md"
 ```
 
 ### 4. Local CLI / Terminal Execution
@@ -155,7 +173,8 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
 
 # Generate local git patch and run review
 git diff origin/main...HEAD > /tmp/pr.patch
-python core/cli.py --diff /tmp/pr.patch --workspace . --output review.md
+python core/cli.py --diff /tmp/pr.patch --workspace . --output review.md \
+  --exclude "tests/**,*.md"
 
 # View generated review
 cat review.md
@@ -173,7 +192,6 @@ Create a `.pr_reviewer.toml` file in the root of your target repository to custo
 name = "AI PR Reviewer"
 model = "deepseek-chat"
 provider = "deepseek"
-severity_threshold = "low"
 language = "portuguese"
 
 [context]
@@ -237,7 +255,10 @@ O PR modifica a função `odom_callback` no arquivo `subscriber.py` para calcula
 
 ## 🤝 Contributing & Star History
 
-Contributions are welcome! Please feel free to submit a Pull Request or open an Issue.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev
+environment, run the test suite, and submit a PR. Please also read our
+[Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See [SECURITY.md](SECURITY.md)
+instead of opening a public issue.
 
 If you find **AI PR Reviewer** helpful, give us a ⭐ on GitHub to support the project!
 

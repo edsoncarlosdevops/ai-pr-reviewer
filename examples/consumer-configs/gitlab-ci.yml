@@ -4,4 +4,5 @@ include:
 ai-review-job:
   extends: .ai-review
   variables:
+    AI_REVIEWER_MODEL: 'deepseek-chat'
     EXCLUDE_PATTERNS: 'tests/**,*.md'

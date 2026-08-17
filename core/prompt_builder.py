@@ -2,8 +2,10 @@
 Builds the LLM prompt by loading prompt templates, context files, language preference, and scope.
 """
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from .diff_analyzer import DiffScope
+
 
 class PromptBuilder:
     def __init__(
@@ -31,7 +33,7 @@ class PromptBuilder:
         # Detect language specific extra prompts
         extra_prompts_map = {}
         prompts_dir = Path(__file__).resolve().parent.parent / "prompts"
-        
+
         for file_path in self.diff_scope.files_changed:
             path_obj = Path(file_path)
             ext = path_obj.suffix.lower()
@@ -55,7 +57,7 @@ class PromptBuilder:
                 extra_prompts_map["GitHub Actions Rules"] = (prompts_dir / "github_actions.md").read_text(encoding="utf-8")
             elif ext in [".yaml", ".yml"] and any(k in file_path.lower() for k in ["k8s", "helm", "manifest", "deployment", "service"]) and (prompts_dir / "kubernetes.md").exists():
                 extra_prompts_map["Kubernetes Rules"] = (prompts_dir / "kubernetes.md").read_text(encoding="utf-8")
-            
+
             if "ros2" in file_path.lower() or "telemetry" in file_path.lower():
                 if (prompts_dir / "ros2.md").exists():
                     extra_prompts_map["ROS 2 Rules"] = (prompts_dir / "ros2.md").read_text(encoding="utf-8")

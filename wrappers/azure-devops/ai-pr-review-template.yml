@@ -2,20 +2,54 @@ parameters:
   - name: exclude_patterns
     type: string
     default: ''
+  - name: model
+    type: string
+    default: 'deepseek-chat'
+  - name: reviewer_ref
+    type: string
+    default: 'v1'
 
 steps:
+  - checkout: self
+    fetchDepth: 0
+    displayName: 'Checkout source with full history'
+
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.10'
+      versionSpec: '3.11'
       addToPath: true
     displayName: 'Set up Python'
 
-  - script: pip install -r $(System.DefaultWorkingDirectory)/requirements.txt
-    displayName: 'Install dependencies'
+  - script: |
+      set -e
+      git clone --depth 1 --branch "${{ parameters.reviewer_ref }}" https://github.com/edsoncarlosdevops/ai-pr-reviewer.git "$(Agent.TempDirectory)/ai-pr-reviewer"
+      pip install --quiet -r "$(Agent.TempDirectory)/ai-pr-reviewer/requirements.txt"
+    displayName: 'Fetch AI PR Reviewer engine'
 
-  - script: python $(System.DefaultWorkingDirectory)/cli/reviewer.py
+  - script: |
+      set -e
+      TARGET_REF="$(System.PullRequest.TargetBranch)"
+      TARGET_BRANCH="${TARGET_REF#refs/heads/}"
+      git fetch origin "$TARGET_BRANCH" --depth=50 || true
+      git diff "origin/${TARGET_BRANCH}...HEAD" > "$(Agent.TempDirectory)/pr_diff.patch" || git diff HEAD~1 > "$(Agent.TempDirectory)/pr_diff.patch"
+    displayName: 'Generate PR diff'
+
+  - script: |
+      python "$(Agent.TempDirectory)/ai-pr-reviewer/core/cli.py" \
+        --diff "$(Agent.TempDirectory)/pr_diff.patch" \
+        --workspace "$(Build.SourcesDirectory)" \
+        --output "$(Agent.TempDirectory)/review_output.md" \
+        --model "${{ parameters.model }}" \
+        --exclude "${{ parameters.exclude_patterns }}"
     env:
       DEEPSEEK_API_KEY: $(DEEPSEEK_API_KEY)
-      AZURE_DEVOPS_TOKEN: $(System.AccessToken)
-      EXCLUDE_PATTERNS: ${{ parameters.exclude_patterns }}
+      OPENAI_API_KEY: $(DEEPSEEK_API_KEY)
     displayName: 'Run AI PR Reviewer'
+
+  - script: |
+      python "$(Agent.TempDirectory)/ai-pr-reviewer/wrappers/azure-devops/post_comment.py" \
+        --review "$(Agent.TempDirectory)/review_output.md"
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    displayName: 'Post PR comment'
+    condition: succeededOrFailed()

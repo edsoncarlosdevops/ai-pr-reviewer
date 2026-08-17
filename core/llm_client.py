@@ -1,15 +1,22 @@
 """
 LLM Client wrapper around OpenAI SDK.
 """
-from typing import Optional
 from openai import OpenAI
+
 from .config import LLMConfig
+
 
 class LLMClient:
     def __init__(self, config: LLMConfig):
+        if not config.api_key:
+            raise ValueError(
+                "No LLM API key configured. Set DEEPSEEK_API_KEY, OPENAI_API_KEY, or "
+                "ANTHROPIC_API_KEY as an environment variable (or provider-specific secret) "
+                "before running the reviewer."
+            )
         self.config = config
         self.client = OpenAI(
-            api_key=config.api_key or "dummy-key",
+            api_key=config.api_key,
             base_url=config.base_url
         )
 
